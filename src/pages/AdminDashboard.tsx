@@ -297,36 +297,37 @@ export const AdminDashboard = () => {
         </header>
         )}
 
-        <div className="p-4 lg:p-8">
+        <div className="p-4 lg:p-6">
           {activeView === 'dashboard' && (
-            <div className="space-y-8">
-              {/* Stats Grid & Trends at a Glance */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <StatCard title="Today's Orders" value={orders.filter(o => new Date(o.createdAt).toDateString() === new Date().toDateString()).length.toString()} change="+0" trend="up" icon={<ShoppingCart />} color="indigo" />
-                  <StatCard title="Active Clients" value={clients.length.toString()} change="+0" trend="up" icon={<Users />} color="violet" />
-                </div>
+            <div className="space-y-6">
+              {/* Top Summary Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard title="Today's Orders" value={orders.filter(o => new Date(o.createdAt).toDateString() === new Date().toDateString()).length.toString()} change="+0" trend="up" icon={<ShoppingCart />} color="indigo" />
+                <StatCard title="Active Clients" value={clients.length.toString()} change="+0" trend="up" icon={<Users />} color="violet" />
                 
-                {/* MRT Operational Health (Ambiguity Solved) */}
-                <div className="bg-white rounded-theme border border-slate-100 p-5 flex flex-col justify-between shadow-sm relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <Zap className="w-20 h-20 text-amber-500" />
+                {/* MRT Operational Health - More Compact */}
+                <div className="lg:col-span-2 bg-white rounded-theme border border-slate-100 p-4 flex flex-col justify-between shadow-sm relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Zap className="w-12 h-12 text-amber-500" />
                   </div>
-                  <div>
-                    <h3 className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100 w-fit uppercase tracking-widest mb-4">Operational Health</h3>
-                    <div className="space-y-4">
-                      <div className="space-y-1.5">
-                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-tighter">
-                          <span className="text-slate-400">Audit Compliance</span>
+                  <div className="flex justify-between items-start gap-6 relative z-10">
+                    <div className="space-y-1.5">
+                      <h3 className="text-[9px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-100 w-fit uppercase tracking-widest mb-1">Operational Health</h3>
+                      <p className="text-[10px] text-slate-400 font-medium">Daily system integrity status</p>
+                    </div>
+                    <div className="flex-1 max-w-[200px] space-y-3">
+                      <div className="space-y-1">
+                        <div className="flex justify-between items-center text-[9px] font-black uppercase">
+                          <span className="text-slate-400">Compliance</span>
                           <span className="text-indigo-600">94%</span>
                         </div>
                         <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
                           <motion.div initial={{ width: 0 }} animate={{ width: '94%' }} className="h-full bg-indigo-500" />
                         </div>
                       </div>
-                      <div className="space-y-1.5">
-                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-tighter">
-                          <span className="text-slate-400">Picking Status</span>
+                      <div className="space-y-1">
+                        <div className="flex justify-between items-center text-[9px] font-black uppercase">
+                          <span className="text-slate-400">Picking</span>
                           <span className="text-emerald-600">Optimal</span>
                         </div>
                         <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
@@ -334,38 +335,42 @@ export const AdminDashboard = () => {
                         </div>
                       </div>
                     </div>
+                    <IconButton 
+                      onClick={() => setActiveView('logs')} 
+                      label="Audit"
+                      className="bg-slate-900 text-white hover:bg-black shadow-lg shadow-slate-200 shrink-0"
+                    >
+                      <Activity className="w-4 h-4" />
+                    </IconButton>
                   </div>
-                  <button onClick={() => setActiveView('logs')} className="mt-6 w-full py-2.5 bg-slate-900 text-white hover:bg-black rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-200">
-                    Quick Chain Audit
-                  </button>
                 </div>
               </div>
 
-              {/* Adaptive UI: Smart Actions */}
+              {/* Adaptive UI: Smart Actions - Slimmer */}
               {smartActions.length > 0 && (
-                <div className="bg-indigo-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl" />
-                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div>
-                      <h3 className="text-xl font-black mb-1 flex items-center gap-2">
-                        <Zap className="w-5 h-5 text-amber-400" />
-                        Smart Actions
-                      </h3>
-                      <p className="text-indigo-200 text-sm font-medium">Based on your recent MRT workflow</p>
+                <div className="bg-slate-900 rounded-theme p-6 text-white shadow-xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/10 rounded-full -mr-10 -mt-10 blur-2xl" />
+                  <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-amber-400 shadow-inner">
+                        <Zap className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-black uppercase tracking-widest">Smart Actions</h3>
+                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-tight">Recent MRT Workflow</p>
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-wrap gap-2">
                       {smartActions.map(action => (
                         <button
                           key={action}
                           onClick={() => {
                             if (action === 'Generate Report') setActiveView('reports');
                             if (action === 'Add Product') { setActiveView('products'); setShowProductModal(true); }
-                            if (action === 'Manage Payments') setActiveView('payments');
                           }}
-                          className="px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-2xl border border-white/10 font-bold text-sm transition-all flex items-center gap-2 group"
+                          className="px-4 py-2 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-xl border border-white/5 font-black text-[9px] uppercase tracking-widest transition-all flex items-center gap-2 active:scale-95"
                         >
                           {action}
-                          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </button>
                       ))}
                     </div>
@@ -373,53 +378,53 @@ export const AdminDashboard = () => {
                 </div>
               )}
 
-              {/* Charts Section */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                  <div className="flex justify-between items-center mb-8">
+              {/* Charts Section - Ultra Compact */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2 bg-white p-5 rounded-theme border border-slate-100 shadow-sm">
+                  <div className="flex justify-between items-center mb-6">
                     <div>
-                      <h3 className="text-lg font-bold">Order Trends</h3>
-                      <p className="text-sm text-slate-500 font-medium">Daily order volume over the last 7 days</p>
+                      <h3 className="text-sm font-black uppercase tracking-widest">Trend Pulse</h3>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Daily order volume</p>
                     </div>
-                    <select className="text-sm border-slate-200 rounded-lg font-semibold bg-slate-50">
-                      <option>Last 7 Days</option>
-                      <option>Last 30 Days</option>
+                    <select className="text-[10px] border-slate-100 rounded-lg font-black uppercase bg-slate-50 py-1.5 px-3">
+                      <option>7 Days</option>
+                      <option>30 Days</option>
                     </select>
                   </div>
-                  <div className="h-[300px]">
+                  <div className="h-[180px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={chartData.orderTrend}>
                         <defs>
                           <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
+                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.08}/>
                             <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
-                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 9}} dy={10} />
+                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 9}} />
                         <Tooltip 
-                          contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
+                          contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '10px'}}
                         />
-                        <Area type="monotone" dataKey="total" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorTotal)" />
+                        <Area type="monotone" dataKey="total" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorTotal)" />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                  <h3 className="text-lg font-bold mb-1">Category Distribution</h3>
-                  <p className="text-sm text-slate-500 font-medium mb-8">Best selling categories (by item qty)</p>
-                  <div className="h-[300px] relative">
+                <div className="bg-white p-5 rounded-theme border border-slate-100 shadow-sm flex flex-col">
+                  <h3 className="text-sm font-black uppercase tracking-widest mb-0.5">Mix</h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight mb-4">By category</p>
+                  <div className="h-[160px] relative">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={chartData.pieData}
                           cx="50%"
                           cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={5}
+                          innerRadius={45}
+                          outerRadius={65}
+                          paddingAngle={4}
                           dataKey="value"
                         >
                           {chartData.pieData.map((_, index) => (
@@ -431,19 +436,19 @@ export const AdminDashboard = () => {
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="text-center">
-                        <p className="text-3xl font-bold text-slate-900">{orders.length}</p>
-                        <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Orders</p>
+                        <p className="text-xl font-black text-slate-900">{orders.length}</p>
+                        <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest">Total</p>
                       </div>
                     </div>
                   </div>
-                  <div className="mt-4 space-y-2">
-                    {chartData.pieData.map((item, idx) => (
-                      <div key={item.name} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
-                          <span className="text-sm font-semibold text-slate-600">{item.name}</span>
+                  <div className="mt-auto pt-4 space-y-1.5">
+                    {chartData.pieData.slice(0, 4).map((item, idx) => (
+                      <div key={item.name} className="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
+                          <span className="truncate max-w-[80px]">{item.name}</span>
                         </div>
-                        <span className="text-sm font-bold">{item.value} units</span>
+                        <span className="font-black text-slate-900">{item.value}</span>
                       </div>
                     ))}
                   </div>
@@ -1944,29 +1949,29 @@ const StatCard = ({ title, value, change, trend, icon, color = "indigo" }: any) 
 
   return (
     <motion.div 
-      whileHover={{ y: -2 }}
-      className="bg-white p-5 rounded-theme border border-slate-100 shadow-sm relative overflow-hidden group"
+      whileHover={{ y: -1 }}
+      className="bg-white p-4 rounded-theme border border-slate-100 shadow-sm relative overflow-hidden group"
     >
-      <div className={cn("absolute top-0 right-0 w-16 h-16 bg-gradient-to-br opacity-5 rounded-bl-3xl transition-transform group-hover:scale-110", colorMap[color])} />
+      <div className={cn("absolute top-0 right-0 w-12 h-12 bg-gradient-to-br opacity-5 rounded-bl-2xl transition-transform group-hover:scale-110", colorMap[color])} />
       
-      <div className="flex justify-between items-start mb-3 relative z-10">
+      <div className="flex justify-between items-start mb-2 relative z-10">
         <div className={cn(
-          "p-2 rounded-xl bg-gradient-to-br ring-1 shadow-sm",
+          "p-1.5 rounded-lg bg-gradient-to-br ring-1 shadow-sm",
           colorMap[color]
         )}>
-          {React.cloneElement(icon, { className: "w-4.5 h-4.5" })}
+          {React.cloneElement(icon, { className: "w-3.5 h-3.5" })}
         </div>
         <div className={cn(
-          "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-sm",
+          "flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider shadow-sm",
           trend === "up" ? "bg-emerald-50/50 text-emerald-600 border border-emerald-100" : "bg-rose-50/50 text-rose-600 border border-rose-100"
         )}>
-          {trend === "up" ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
+          {trend === "up" ? <ArrowUpRight className="w-2 h-2" /> : <ArrowDownRight className="w-2 h-2" />}
           {change}
         </div>
       </div>
       <div className="relative z-10">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{title}</p>
-        <p className="text-2xl font-black text-slate-900 leading-none tracking-tight">{value}</p>
+        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{title}</p>
+        <p className="text-xl font-black text-slate-900 leading-none tracking-tight">{value}</p>
       </div>
     </motion.div>
   );

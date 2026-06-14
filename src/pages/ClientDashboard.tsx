@@ -326,7 +326,7 @@ export const ClientDashboard = () => {
                 className="p-5 bg-gradient-to-r from-slate-900 to-indigo-900 text-white rounded-[2rem] shadow-xl relative overflow-hidden group"
               >
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
-                  <Bell className="w-16 h-16" />
+                  <Bell className="w-14 h-14" />
                 </div>
                 <div className="relative z-10 space-y-1">
                   <div className="flex items-center gap-2">

@@ -1,0 +1,57 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: #f8fafc;
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+:root {
+  --radius-organic: 2.5rem;
+  --radius-precision: 0.5rem;
+  --radius-flat: 1rem;
+}
+
+.theme-dairy {
+  --app-radius: var(--radius-organic);
+  --app-accent: #4f46e5;
+}
+
+.theme-pharma {
+  --app-radius: var(--radius-precision);
+  --app-accent: #e11d48;
+}
+
+.theme-stationery {
+  --app-radius: var(--radius-flat);
+  --app-accent: #10b981;
+}
+
+.rounded-theme {
+  border-radius: var(--app-radius);
+}

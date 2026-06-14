@@ -1,0 +1,151 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  CLIENT
+  CLIENT_USER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  DISPATCHED
+  DELIVERED
+  ISSUE
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PAID
+  PENDING
+  PARTIAL
+  OVERDUE
+}
+
+enum PaymentMode {
+  CASH
+  UPI
+  NEFT
+  RTGS
+  CHEQUE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(CLIENT)
+  clientId  String?
+  client    Client?  @relation(fields: [clientId], references: [id])
+  orders    Order[]  @relation("PlacedBy")
+  logs      AuditLog[]
+  createdAt DateTime @default(now())
+}
+
+model Client {
+  id                 String    @id @default(cuid())
+  companyName        String    @unique
+  contactPerson      String
+  email              String    @unique
+  phone              String
+  address            String
+  password           String    @default("client123")
+  outstandingBalance Float     @default(0)
+  isArchived         Boolean   @default(false)
+  archivedAt         DateTime?
+  users              User[]
+  orders             Order[]
+  createdAt          DateTime  @default(now())
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  products Product[]
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  sku         String      @unique
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id])
+  unit        String
+  price       Float
+  image       String
+  active      Boolean     @default(true)
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id                 String       @id @default(cuid())
+  clientId           String
+  client             Client       @relation(fields: [clientId], references: [id])
+  placedById         String
+  placedBy           User         @relation("PlacedBy", fields: [placedById], references: [id])
+  totalAmount        Float
+  status             OrderStatus  @default(PENDING)
+  deliveryDate       DateTime
+  deliveryConfirmed  Boolean      @default(false)
+  deliveryConfirmedBy String?
+  deliveryConfirmedAt DateTime?
+  deliveryImage      String?
+  deliveryIssue      String?
+  paymentStatus      PaymentStatus @default(PENDING)
+  items              OrderItem[]
+  paymentLogs        PaymentLog[]
+  auditLogs          AuditLog[]
+  createdAt          DateTime     @default(now())
+}
+
+model OrderItem {
+  id           String  @id @default(cuid())
+  orderId      String
+  order        Order   @relation(fields: [orderId], references: [id])
+  productId    String
+  product      Product @relation(fields: [productId], references: [id])
+  quantity     Int
+  priceAtOrder Float
+}
+
+model PaymentLog {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id])
+  amount    Float
+  mode      PaymentMode
+  refNumber String?
+  notes     String?
+  timestamp DateTime    @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  details   String
+  timestamp DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   // INFO, WARNING, SUCCESS, ALERT
+  read      Boolean  @default(false)
+  timestamp DateTime @default(now())
+}

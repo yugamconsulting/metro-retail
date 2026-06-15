@@ -1709,6 +1709,7 @@ export const AdminDashboard = () => {
                   id: `c-${Date.now()}`,
                   clientNumber: '', 
                   companyName: name,
+                  gstNumber: formData.get('gstNumber') as string,
                   contactPerson: formData.get('contactPerson') as string,
                   email: (formData.get('email') as string).trim().toLowerCase(),
                   phone: (formData.get('phone') as string).trim(),
@@ -1730,9 +1731,15 @@ export const AdminDashboard = () => {
                 <label className="text-xs font-bold text-slate-400 uppercase">Company Name</label>
                 <input name="companyName" required onChange={() => setClientError('')} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Hotel Taj" />
               </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400 uppercase">Contact Person</label>
-                <input name="contactPerson" required className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="John Doe" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase">Contact Person</label>
+                  <input name="contactPerson" required className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="John Doe" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase">GST / Registration No</label>
+                  <input name="gstNumber" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Optional" />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">

@@ -63,6 +63,7 @@ export interface Client {
   id: string;
   clientNumber: string;
   companyName: string;
+  gstNumber?: string;
   contactPerson: string;
   email: string;
   phone: string;

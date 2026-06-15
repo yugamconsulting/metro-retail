@@ -288,10 +288,11 @@ export const generateDeliveryConfirmation = ({
   doc.setFont('helvetica', 'bold');
   doc.text('Client Info:', 15, 55);
   doc.setFont('helvetica', 'normal');
-  doc.text(client.companyName, 15, 62);
+  doc.text(client.companyName.toUpperCase(), 15, 62);
   doc.setFontSize(9);
-  doc.text(`Client ID: ${client.clientNumber}`, 15, 68);
-  doc.text(client.address, 15, 73, { maxWidth: 80 });
+  doc.text(`ID: ${client.clientNumber}`, 15, 68);
+  if (client.gstNumber) doc.text(`GST: ${client.gstNumber}`, 15, 73);
+  doc.text(client.address, 15, client.gstNumber ? 78 : 73, { maxWidth: 80 });
 
   // Confirmation Details
   doc.setFontSize(12);

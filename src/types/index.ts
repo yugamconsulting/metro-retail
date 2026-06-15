@@ -91,7 +91,9 @@ export interface Product {
   category: string;
   subcategory?: string;
   unit: string;
+  unitValue: number; // New: value per 1 qty (e.g. 50 if 1 qty = 50 liters)
   image: string;
+  iconName?: string; // New: Lucide icon name string
   active: boolean;
   moq: number; // Minimum Order Quantity
 }

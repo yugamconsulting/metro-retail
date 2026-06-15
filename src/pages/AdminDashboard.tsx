@@ -7,7 +7,7 @@ import {
   ClipboardList, Bell,
   LogOut, Trash2, CheckCircle2, Lock, MoreHorizontal, X, AlertCircle,
   FileText, Calendar, Download as DownloadIcon, Share2, Settings, ShieldCheck,
-  Zap, ArrowRight, QrCode, Menu, Edit3, Activity, Filter, Truck
+  Zap, QrCode, Menu, Edit3, Activity, Filter, Truck, FileCheck
 } from 'lucide-react';
 
 const IconButton = ({ children, onClick, label, className }: any) => (
@@ -28,7 +28,7 @@ const IconButton = ({ children, onClick, label, className }: any) => (
   </div>
 );
 import { QRCodeSVG } from 'qrcode.react';
-import { generateOrderReport, generateMasterPickList } from '../utils/pdfGenerator';
+import { generateOrderReport, generateMasterPickList, generateDeliveryConfirmation } from '../utils/pdfGenerator';
 import { subDays, format } from 'date-fns';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, 
@@ -42,6 +42,7 @@ import { SyncIndicator } from '../components/SyncIndicator';
 import { useAutoSync } from '../hooks/useAutoSync';
 import { CommandPalette } from '../components/CommandPalette';
 import { AuditChain } from '../components/AuditChain';
+import { ProductIcon } from '../components/ProductIcon';
 
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e'];
 
@@ -662,8 +663,21 @@ export const AdminDashboard = () => {
                                   <option value="CANCELLED">Cancelled</option>
                                 </select>
                               </td>
-                              <td className="px-6 py-4 text-right">
-                                <IconButton label="Log" onClick={() => console.log('Audit')} className="text-slate-400 hover:text-indigo-600"><MoreHorizontal className="w-4 h-4" /></IconButton>
+                              <td className="px-6 py-4 text-right flex justify-end gap-1">
+                                {order.status === 'DELIVERED' && (
+                                  <IconButton 
+                                    label="DC" 
+                                    onClick={() => generateDeliveryConfirmation({ 
+                                      client: clients.find(c => c.id === order.clientId), 
+                                      order, 
+                                      products 
+                                    })} 
+                                    className="text-emerald-500 hover:bg-emerald-50"
+                                  >
+                                    <FileCheck className="w-4 h-4" />
+                                  </IconButton>
+                                )}
+                                <IconButton label="Audit" onClick={() => setActiveView('logs')} className="text-slate-400 hover:text-indigo-600"><MoreHorizontal className="w-4 h-4" /></IconButton>
                               </td>
                             </tr>
                           );
@@ -751,12 +765,13 @@ export const AdminDashboard = () => {
                           <tr key={p.id} className="hover:bg-slate-50/50 transition-colors group">
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 ring-1 ring-slate-200">
-                                  <img src={p.image} className="w-full h-full object-cover" />
-                                </div>
+                                <ProductIcon 
+                                  productName={p.name} 
+                                  className={cn("w-12 h-12 ring-1 ring-slate-100", Role.CLIENT ? "bg-white" : "")} 
+                                />
                                 <div>
-                                  <p className="font-black text-slate-900 leading-none">{p.name}</p>
-                                  <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase">{p.unit}</p>
+                                  <p className="font-black text-slate-900 leading-none">{p.name.toUpperCase()}</p>
+                                  <p className="text-[10px] text-slate-400 mt-1 font-bold lowercase">{p.unit.toLowerCase()}</p>
                                 </div>
                               </div>
                             </td>
@@ -805,8 +820,8 @@ export const AdminDashboard = () => {
                       key={p.id}
                       className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all group"
                     >
-                      <div className="aspect-square relative overflow-hidden bg-slate-100">
-                        <img src={p.image} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <div className="aspect-square relative overflow-hidden bg-slate-50 flex items-center justify-center p-8">
+                        <ProductIcon productName={p.name} className="w-full h-full text-indigo-600/30" />
                         <div className="absolute top-3 left-3 flex gap-2">
                           <span className="bg-white/90 backdrop-blur-md px-2 py-1 rounded-lg text-[9px] font-black text-slate-900 shadow-sm">{p.sku}</span>
                         </div>
@@ -826,8 +841,8 @@ export const AdminDashboard = () => {
                       <div className="p-4 space-y-3">
                         <div>
                           <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest">{p.category}</p>
-                          <h4 className="font-black text-slate-900 leading-tight line-clamp-1">{p.name}</h4>
-                          <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">{p.unit}</p>
+                          <h4 className="font-black text-slate-900 leading-tight line-clamp-1">{p.name.toUpperCase()}</h4>
+                          <p className="text-[10px] text-slate-400 font-bold mt-1 lowercase tracking-tighter">{p.unit.toLowerCase()}</p>
                         </div>
                         <div className="flex items-end justify-end">
                           <div className="flex gap-1">
@@ -1770,8 +1785,10 @@ export const AdminDashboard = () => {
                   sku: sku,
                   category: category,
                   unit: formData.get('unit') as string,
+                  unitValue: Number(formData.get('unitValue') || 1),
                   moq: Number(formData.get('moq') || 1),
-                  image: 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=200&h=200&fit=crop',
+                  iconName: formData.get('iconName') as string,
+                  image: '', 
                   active: true
                 });
                 setShowProductModal(false);
@@ -1800,23 +1817,45 @@ export const AdminDashboard = () => {
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-400 uppercase">Unit Type (Preset)</label>
                   <select name="unit" required className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
-                    <option>Liter</option>
-                    <option>ml</option>
-                    <option>Kg</option>
-                    <option>Gram</option>
-                    <option>Pieces</option>
-                    <option>Box</option>
-                    <option>Pack (30 Pcs)</option>
-                    <option>Pack (10 Pcs)</option>
-                    <option>Tray</option>
-                    <option>Carton</option>
-                    <option>Crate</option>
+                    <option value="liter">liter</option>
+                    <option value="ml">ml</option>
+                    <option value="kg">kg</option>
+                    <option value="gram">gram</option>
+                    <option value="pieces">pieces</option>
+                    <option value="box">box</option>
+                    <option value="pack (30 pcs)">pack (30 pcs)</option>
+                    <option value="pack (10 pcs)">pack (10 pcs)</option>
+                    <option value="tray">tray</option>
+                    <option value="carton">carton</option>
+                    <option value="crate">crate</option>
                   </select>
                 </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400 uppercase">Minimum Order Quantity (MOQ)</label>
-                <input name="moq" type="number" defaultValue="1" min="1" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Unit Size (e.g. 50)</label>
+                  <input name="unitValue" type="number" defaultValue="1" min="1" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">MOQ (Qty)</label>
+                  <input name="moq" type="number" defaultValue="1" min="1" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase">Product Icon</label>
+                  <select name="iconName" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <option value="">Default (Auto)</option>
+                    <option value="milk">Milk / Dairy</option>
+                    <option value="meat">Meat / Poultry</option>
+                    <option value="frozen">Frozen / Ice</option>
+                    <option value="beverage">Beverage / Coffee</option>
+                    <option value="egg">Egg</option>
+                    <option value="pizza">Cheese / Pizza</option>
+                    <option value="veg">Vegetables</option>
+                    <option value="fruit">Fruits</option>
+                    <option value="stationery">Stationery</option>
+                    <option value="pharma">Pharma</option>
+                  </select>
+                </div>
               </div>
               <div className="flex gap-3 pt-4">
                 <button type="button" onClick={() => setShowProductModal(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl">Cancel</button>

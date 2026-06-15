@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { Role, ClientUser } from '../types';
-import { Shield, ArrowRight, Mail, Lock, Eye, EyeOff, Zap, ShieldCheck, Activity, FileCheck, Bell, AlertCircle } from 'lucide-react';
+import { Shield, ArrowRight, Mail, Lock, Eye, EyeOff, Bell, Zap, ShieldCheck, Activity, FileCheck, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../utils/utils';
 
@@ -17,9 +17,9 @@ const FeatureItem = ({ icon, title, desc, color, isMobile }: any) => (
     <div className={cn("absolute top-0 right-0 w-12 h-12 opacity-5 rounded-bl-full transition-transform group-hover:scale-110", color.split(' ')[0])} />
     <div className={cn("rounded-xl flex items-center justify-center shadow-md relative z-10", 
       color,
-      isMobile ? "w-7 h-7" : "w-10 h-10"
+      isMobile ? "w-8 h-8" : "w-10 h-10"
     )}>
-      {React.cloneElement(icon, { className: isMobile ? "w-3.5 h-3.5" : "w-5 h-5" })}
+      {React.cloneElement(icon, { className: isMobile ? "w-4 h-4" : "w-5 h-5" })}
     </div>
     <div className="relative z-10">
       <p className={cn("font-black text-slate-900 leading-none", isMobile ? "text-[9px] uppercase tracking-tighter" : "text-xs")}>{title}</p>
@@ -74,7 +74,7 @@ export const Login = () => {
     const cleanPassword = password.trim();
     const mockToken = `mrt_tk_${Math.random().toString(36).substring(7)}`;
 
-    // Driver Login - by mobile number or email
+    // Driver Login
     const driver = drivers.find(d => (d.email.toLowerCase() === cleanEmail || d.name === cleanEmail) && (d as any).password === cleanPassword);
     if (driver) {
       setUser(driver, mockToken);
@@ -140,6 +140,10 @@ export const Login = () => {
       setError('Password must be at least 6 characters.');
       return;
     }
+    if (newPassword === 'client123' || newPassword === 'user123') {
+      setError('New password cannot be the default value.');
+      return;
+    }
 
     const mockToken = `mrt_tk_${Math.random().toString(36).substring(7)}`;
     updateFirstLoginPassword(pendingUser.clientId, pendingUser.role === Role.CLIENT_USER ? pendingUser.id : null, newPassword);
@@ -170,67 +174,105 @@ export const Login = () => {
 
   if (pendingUser) {
     return (
-      <div className={cn("h-screen w-screen flex flex-col items-center justify-center p-6 bg-white font-sans overflow-hidden", themeClass)}>
-        <div className="w-full max-w-[380px] space-y-6">
-          <div className="text-center space-y-2">
-            <div className="w-12 h-12 bg-amber-500 rounded-theme flex items-center justify-center shadow-lg shadow-amber-100 mx-auto mb-2">
-              <Lock className="text-white w-6 h-6" />
+      <div className={cn("h-screen w-screen flex flex-col items-center justify-center p-6 bg-slate-50 relative overflow-hidden font-sans", themeClass)}>
+         {/* Background Orbs */}
+         <div className="absolute inset-0 pointer-events-none z-0">
+          <motion.div animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }} transition={{ duration: 20, repeat: Infinity }} className="absolute -top-24 -left-24 w-96 h-96 bg-amber-500/5 rounded-full blur-[100px]" />
+          <motion.div animate={{ scale: [1, 1.3, 1], rotate: [0, -90, 0] }} transition={{ duration: 25, repeat: Infinity }} className="absolute -bottom-32 -right-32 w-[30rem] h-[30rem] bg-amber-500/10 rounded-full blur-[120px]" />
+        </div>
+
+        <div className="w-full max-w-[380px] space-y-8 relative z-10">
+          <div className="text-center space-y-4">
+            <motion.div 
+              initial={{ scale: 0.8, rotate: -10 }}
+              animate={{ scale: 1, rotate: 0 }}
+              className="w-16 h-16 bg-white rounded-theme flex items-center justify-center shadow-2xl ring-4 ring-amber-100 mx-auto"
+            >
+              <ShieldCheck className="text-amber-500 w-8 h-8" />
+            </motion.div>
+            <div className="space-y-1">
+              <h1 className="text-2xl font-black tracking-tight text-slate-900 leading-none">Account Security</h1>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed max-w-[280px] mx-auto mt-2">
+                Hello <span className="text-indigo-600">@{pendingUser.name.split(' ')[0]}</span>, please set your private password to finish onboarding.
+              </p>
             </div>
-            <h1 className="text-xl font-black tracking-tight text-slate-900">Security Update</h1>
-            <p className="text-slate-500 text-xs">Set a new password to continue.</p>
           </div>
 
-          <form onSubmit={handleChangePassword} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">New Password</label>
-              <div className="relative">
-                <input
-                  type={showNewPassword ? 'text' : 'password'}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none font-bold text-sm"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-indigo-600 transition-colors"
-                >
-                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="bg-white/80 backdrop-blur-2xl p-8 rounded-theme shadow-2xl border border-white/50 space-y-6"
+          >
+            <form onSubmit={handleChangePassword} className="space-y-5">
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Create Secret Key</label>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-indigo-600 transition-colors" />
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Set new password"
+                    className="w-full pl-11 pr-4 py-4 bg-slate-50/50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none font-bold text-slate-900 text-sm"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-slate-300 hover:text-indigo-600 transition-colors"
+                  >
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm Password</label>
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none font-bold text-sm"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-indigo-600 transition-colors"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm Secret Key</label>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-indigo-600 transition-colors" />
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repeat password"
+                    className="w-full pl-11 pr-4 py-4 bg-slate-50/50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none font-bold text-slate-900 text-sm"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-slate-300 hover:text-indigo-600 transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {error && <p className="text-red-500 text-[10px] font-bold bg-rose-50 p-2 rounded-lg">{error}</p>}
+              {error && (
+                <motion.div 
+                  initial={{ x: -10 }} 
+                  animate={{ x: 0 }} 
+                  className="p-3 bg-rose-50 border border-rose-100 rounded-xl flex items-center gap-2 text-rose-600 text-[10px] font-black uppercase tracking-tighter"
+                >
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {error}
+                </motion.div>
+              )}
 
-            <button
-              type="submit"
-              className="w-full bg-slate-900 hover:bg-black text-white font-black py-3.5 rounded-xl shadow-xl transition-all active:scale-95 text-sm uppercase tracking-widest"
-            >
-              Update & Login
-            </button>
-          </form>
+              <button
+                type="submit"
+                className="w-full bg-slate-900 hover:bg-black text-white font-black py-4 rounded-2xl shadow-xl transition-all active:scale-95 text-xs uppercase tracking-widest"
+              >
+                Complete Setup & Login
+              </button>
+            </form>
+          </motion.div>
+
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+            <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+            <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+          </div>
         </div>
       </div>
     );
@@ -264,7 +306,7 @@ export const Login = () => {
           <div className="grid grid-cols-2 gap-4 max-w-md">
             <FeatureItem icon={<Zap />} title="Fast Orders" desc="Under 10s daily routine" color="text-amber-600 bg-amber-50" />
             <FeatureItem icon={<FileCheck />} title="Audit Gate" desc="Mandatory proof-of-delivery" color="text-indigo-600 bg-indigo-50" />
-            <FeatureItem icon={<Activity />} title="Live Sync" desc="Real-time warehouse trail" color="text-emerald-600 bg-emerald-50" />
+            <FeatureItem icon={<Activity />} title="Live Sync" desc="Real-time warehouse tracking" color="text-emerald-600 bg-emerald-50" />
             <FeatureItem icon={<ShieldCheck />} title="Secure Vault" desc="Secured multi-user access" color="text-blue-600 bg-blue-50" />
           </div>
 
@@ -318,13 +360,13 @@ export const Login = () => {
 
                 <div className="flex flex-col gap-3 pt-1">
                   <button type="submit" className="w-full bg-slate-900 hover:bg-black text-white font-black py-3.5 rounded-xl shadow-xl transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest active:scale-95">Sign In <ArrowRight className="w-4 h-4" /></button>
-                  <a href="https://metroretailtrade.com" target="_blank" rel="noopener noreferrer" className="w-full py-3 bg-white border border-slate-100 text-slate-400 rounded-xl text-[9px] font-black uppercase tracking-widest text-center active:scale-95 transition-all">MRT Corporate</a>
+                  <a href="https://metroretailtrade.com" target="_blank" rel="noopener noreferrer" className="w-full py-3 bg-white border border-slate-100 text-slate-400 rounded-xl text-[9px] font-black uppercase tracking-widest text-center active:scale-95 transition-all">Visit MRT Site</a>
                 </div>
               </form>
             </motion.div>
 
             {/* Mobile Feature Grid - Horizontal & Super Compact */}
-            <div className="lg:hidden grid grid-cols-4 gap-2">
+            <div className="lg:hidden grid grid-cols-4 gap-2 px-1">
               <FeatureItem icon={<Zap />} title="Fast Order" isMobile={true} color="text-amber-600 bg-amber-50" />
               <FeatureItem icon={<FileCheck />} title="Audit Gate" isMobile={true} color="text-indigo-600 bg-indigo-50" />
               <FeatureItem icon={<Activity />} title="Live Sync" isMobile={true} color="text-emerald-600 bg-emerald-50" />

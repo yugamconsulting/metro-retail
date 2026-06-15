@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { 
   ShoppingBag, Search, History, 
@@ -6,7 +6,8 @@ import {
   AlertCircle, Upload, Plus, Minus,
   Clock, Lock, Share2, 
   Milk, Snowflake, Beef, Box, Coffee,
-  QrCode, LayoutDashboard, ShoppingCart, RefreshCw, ArrowRight, X, Bell, Zap
+  QrCode, LayoutDashboard, ShoppingCart, RefreshCw, ArrowRight, X, Bell, Zap,
+  FileCheck
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -33,6 +34,8 @@ import { getCutoffStatus, cn, formatDate, timeAgo } from '../utils/utils';
 import { Product, OrderItem, isClientUser } from '../types';
 import { SyncIndicator } from '../components/SyncIndicator';
 import { useAutoSync } from '../hooks/useAutoSync';
+import { ProductIcon } from '../components/ProductIcon';
+import { generateDeliveryConfirmation } from '../utils/pdfGenerator';
 
 export const ClientDashboard = () => {
   useAutoSync();
@@ -49,7 +52,15 @@ export const ClientDashboard = () => {
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const userClientId = isClientUser(user) ? user.clientId : null;
   const clientData = clients.find(c => c.id === userClientId);
-  const lastUnconfirmedOrder = orders.find(o => o.clientId === userClientId && !o.deliveryConfirmed);
+  
+  // Logic: Only ask for confirmation if the order was for "Yesterday" or earlier, 
+  // or if it has been marked as DISPATCHED by the MRT Admin/Driver.
+  const lastUnconfirmedOrder = orders.find(o => 
+    o.clientId === userClientId && 
+    !o.deliveryConfirmed && 
+    (o.status === 'DISPATCHED' || new Date(o.deliveryDate) < new Date(new Date().setHours(0,0,0,0)))
+  );
+
   const securityAlert = notifications.find(n => n.userId === userClientId && n.type === 'WARNING' && !n.read);
   
   const [showDeliveryModal, setShowDeliveryModal] = useState(!!lastUnconfirmedOrder);
@@ -157,7 +168,8 @@ export const ClientDashboard = () => {
     
     order.items.forEach((item: any, index: number) => {
       const product = products.find(p => p.id === item.productId);
-      text += `${index + 1}. ${product?.name} x ${item.quantity} ${product?.unit}\n`;
+      const totalUnits = (product?.unitValue || 1) * item.quantity;
+      text += `${index + 1}. ${product?.name?.toUpperCase()} x ${item.quantity} [Total: ${totalUnits} ${product?.unit?.toLowerCase()}]\n`;
     });
     
     text += `--------------------------\n`;
@@ -326,7 +338,7 @@ export const ClientDashboard = () => {
                 className="p-5 bg-gradient-to-r from-slate-900 to-indigo-900 text-white rounded-[2rem] shadow-xl relative overflow-hidden group"
               >
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
-                  <Bell className="w-14 h-14" />
+                  <Bell className="w-16 h-16" />
                 </div>
                 <div className="relative z-10 space-y-1">
                   <div className="flex items-center gap-2">
@@ -424,9 +436,9 @@ export const ClientDashboard = () => {
                       <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-sm", config.color)}>
                         {config.icon}
                       </div>
-                      <p className="text-[10px] font-black text-slate-900 text-center leading-tight truncate w-full">{product.name}</p>
+                      <p className="text-[10px] font-black text-slate-900 text-center leading-tight truncate w-full">{product.name.toUpperCase()}</p>
                       <div className="px-2 py-0.5 bg-slate-50 rounded-lg border border-slate-100 text-[8px] font-black text-slate-400">
-                        {product.unit}
+                        {product.unit.toLowerCase()}
                       </div>
                     </motion.button>
                   );
@@ -437,9 +449,14 @@ export const ClientDashboard = () => {
             {/* Current Workspace (Cart) */}
             <section className="space-y-4">
               <div className="flex justify-between items-center px-1">
-                <h3 className="text-xl font-black text-slate-900">Today's Workspace</h3>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-xl font-black text-slate-900">Today's Workspace</h3>
+                  {editingOrderId && (
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[8px] font-black uppercase rounded-full border border-amber-200 animate-pulse">Editing Order</span>
+                  )}
+                </div>
                 {cart.length > 0 && (
-                  <button onClick={() => setCart([])} className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Clear All</button>
+                  <button onClick={() => { setCart([]); setEditingOrderId(null); }} className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Clear All</button>
                 )}
               </div>
 
@@ -467,12 +484,16 @@ export const ClientDashboard = () => {
                         className="bg-white p-4 rounded-3xl border border-slate-200 flex items-center justify-between shadow-sm"
                       >
                         <div className="flex items-center gap-4">
-                          <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", config.light, config.text)}>
-                            {React.cloneElement(config.icon, { className: "w-6 h-6" })}
-                          </div>
+                          <ProductIcon 
+                            productName={product.name} 
+                            name={product.iconName} 
+                            className={cn("w-12 h-12 rounded-xl", config.light, config.text)} 
+                          />
                           <div>
-                            <p className="text-sm font-black text-slate-900 leading-none">{product.name}</p>
-                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{product.unit}</p>
+                            <p className="text-sm font-black text-slate-900 leading-none">{product.name.toUpperCase()}</p>
+                            <p className="text-[10px] font-bold text-slate-400 mt-1 lowercase tracking-widest">
+                              1 qty = {product.unitValue} {product.unit.toLowerCase()}
+                            </p>
                           </div>
                         </div>
                         
@@ -576,13 +597,15 @@ export const ClientDashboard = () => {
                     key={product.id}
                     className="bg-white p-3 rounded-3xl border border-slate-200 flex gap-4 hover:border-indigo-200 transition-colors shadow-sm"
                   >
-                    <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
-                      <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                    </div>
+                    <ProductIcon 
+                      productName={product.name} 
+                      name={product.iconName} 
+                      className={cn("w-20 h-20 rounded-2xl bg-slate-50 flex-shrink-0", config.text)} 
+                    />
                     <div className="flex-1 flex flex-col justify-between py-0.5">
                       <div>
                         <div className="flex justify-between items-start gap-2">
-                          <h3 className="text-sm font-black text-slate-900 leading-tight">{product.name}</h3>
+                          <h3 className="text-sm font-black text-slate-900 leading-tight">{product.name.toUpperCase()}</h3>
                           <div className={cn(
                             "flex items-center gap-1 px-1.5 py-0.5 rounded border text-[9px] font-black uppercase tracking-tighter shrink-0",
                             config.light,
@@ -593,7 +616,9 @@ export const ClientDashboard = () => {
                             {product.sku}
                           </div>
                         </div>
-                        <p className="text-[11px] text-slate-500 font-bold mt-1 uppercase tracking-tighter">{product.unit}</p>
+                        <p className="text-[11px] text-slate-500 font-bold mt-1 lowercase tracking-tighter">
+                          1 qty = {product.unitValue} {product.unit.toLowerCase()}
+                        </p>
                       </div>
 
                       <div className="flex items-center justify-between mt-2">
@@ -650,6 +675,15 @@ export const ClientDashboard = () => {
                       <p className="text-sm font-black text-slate-900 mt-0.5">{timeAgo(order.createdAt)} • {formatDate(order.createdAt)}</p>
                     </div>
                     <div className="flex items-center gap-2">
+                      {order.status === 'DELIVERED' && (
+                        <IconButton 
+                          onClick={() => generateDeliveryConfirmation({ client: clientData, order, products })}
+                          label="Receipt"
+                          className="text-emerald-500 hover:bg-emerald-50"
+                        >
+                          <FileCheck className="w-4 h-4" />
+                        </IconButton>
+                      )}
                       <IconButton 
                         onClick={() => handleShare(order)}
                         label="Share"
@@ -681,6 +715,18 @@ export const ClientDashboard = () => {
                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                       {order.items.length} items • Delivery: {formatDate(order.deliveryDate)}
                     </div>
+                  </div>
+                  <div className="mt-2 space-y-1">
+                    {order.items.map((item, idx) => {
+                      const p = products.find(prod => prod.id === item.productId);
+                      if (!p) return null;
+                      return (
+                        <div key={idx} className="flex justify-between text-[9px] font-bold text-slate-500 uppercase tracking-tight">
+                          <span>{p.name}</span>
+                          <span>{item.quantity} qty ({item.quantity * p.unitValue} {p.unit.toLowerCase()})</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ))
@@ -859,8 +905,20 @@ export const ClientDashboard = () => {
                     </button>
                     <button 
                       onClick={() => {
-                        if (lastUnconfirmedOrder && user) {
+                        if (lastUnconfirmedOrder && user && clientData) {
+                          const timestamp = new Date().toISOString();
                           confirmDelivery(lastUnconfirmedOrder.id, user.id);
+                          
+                          // Generate DC PDF immediately
+                          generateDeliveryConfirmation({
+                            client: clientData,
+                            order: { 
+                              ...lastUnconfirmedOrder, 
+                              deliveryConfirmedAt: timestamp,
+                              deliveryConfirmedBy: user.name 
+                            },
+                            products: products
+                          });
                         }
                         setShowDeliveryModal(false);
                       }}
@@ -892,8 +950,8 @@ export const ClientDashboard = () => {
             >
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-xl font-black text-slate-900">Seamless Handoff</h3>
-                <button onClick={() => setShowQrHandoff(false)} className="p-2 hover:bg-slate-100 rounded-full">
-                  <QrCode className="w-5 h-5 text-slate-400" />
+                <button onClick={() => setShowQrHandoff(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors group">
+                  <X className="w-5 h-5 text-slate-400 group-hover:text-slate-600" />
                 </button>
               </div>
               
@@ -993,8 +1051,8 @@ export const ClientDashboard = () => {
                   <h3 className="text-xl font-bold">Order Summary</h3>
                   <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{shareOrderModal.id}</p>
                 </div>
-                <button onClick={() => setShareOrderModal(null)} className="p-2 hover:bg-slate-100 rounded-full">
-                  <Share2 className="w-5 h-5 text-slate-400" />
+                <button onClick={() => setShareOrderModal(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors group">
+                  <X className="w-5 h-5 text-slate-400 group-hover:text-slate-600" />
                 </button>
               </div>
               <div className="p-8 space-y-6">
